@@ -1,0 +1,249 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "format:{employee_name}-{selected_date}",
+ "creation": "2022-12-17 14:05:02.080988",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "section_break_1",
+  "job_code",
+  "employee",
+  "employee_name",
+  "column_break_4",
+  "status",
+  "selected_date",
+  "section_break_7",
+  "checkin_date",
+  "checkin_access_gate_name_ar",
+  "checkin_access_gate_name_en",
+  "sub_type_id",
+  "column_break_12",
+  "checkout_date",
+  "checkout_access_gate_name_ar",
+  "checkout_access_gate_name_en",
+  "checkout_date_time",
+  "section_break_16",
+  "total_plan_work_hour_during_interval",
+  "total_hours_work_during_interval",
+  "total_checkin_late_hours_during_interval",
+  "total_checkout_late_hours_during_interval",
+  "working_hours",
+  "column_break_15",
+  "first_shift_start_time",
+  "first_shift_end_time",
+  "session_total_checkin_late_hours",
+  "sec_shift_start_time",
+  "sec_shift_end_time",
+  "session_total_checkout_late_hours",
+  "actual_working_hours",
+  "session_total_shortes_hours",
+  "session_total_overtime_hours",
+  "session_total_overtime_extra_hours",
+  "session_total_holiday_overtime_hours"
+ ],
+ "fields": [
+  {
+   "fieldname": "job_code",
+   "fieldtype": "Read Only",
+   "label": "Job Code"
+  },
+  {
+   "fieldname": "employee",
+   "fieldtype": "Read Only",
+   "label": "Employee"
+  },
+  {
+   "fieldname": "employee_name",
+   "fieldtype": "Read Only",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Employee Name"
+  },
+  {
+   "fieldname": "total_plan_work_hour_during_interval",
+   "fieldtype": "Read Only",
+   "label": "Total Plan Work Hour During Interval"
+  },
+  {
+   "fieldname": "total_hours_work_during_interval",
+   "fieldtype": "Read Only",
+   "label": "Total Hours Work During Interval"
+  },
+  {
+   "fieldname": "total_checkin_late_hours_during_interval",
+   "fieldtype": "Read Only",
+   "label": "Total CheckIn Late Hours During Interval"
+  },
+  {
+   "fieldname": "total_checkout_late_hours_during_interval",
+   "fieldtype": "Read Only",
+   "label": "Total CheckOut Late Hours During Interval"
+  },
+  {
+   "fieldname": "selected_date",
+   "fieldtype": "Read Only",
+   "label": "Selected Date"
+  },
+  {
+   "fieldname": "working_hours",
+   "fieldtype": "Read Only",
+   "label": "Working Hours"
+  },
+  {
+   "fieldname": "checkin_date",
+   "fieldtype": "Read Only",
+   "label": "CheckIn Date"
+  },
+  {
+   "fieldname": "sub_type_id",
+   "fieldtype": "Read Only",
+   "label": "Sub Type ID"
+  },
+  {
+   "fieldname": "checkin_access_gate_name_ar",
+   "fieldtype": "Read Only",
+   "label": "CheckIn Access Gate Name Ar"
+  },
+  {
+   "fieldname": "checkin_access_gate_name_en",
+   "fieldtype": "Read Only",
+   "label": "CheckIn Access Gate Name En"
+  },
+  {
+   "fieldname": "checkout_date",
+   "fieldtype": "Read Only",
+   "label": "CheckOut Date"
+  },
+  {
+   "fieldname": "checkout_date_time",
+   "fieldtype": "Read Only",
+   "label": "CheckOut Date Time"
+  },
+  {
+   "fieldname": "checkout_access_gate_name_ar",
+   "fieldtype": "Read Only",
+   "label": "CheckOut Access Gate Name Ar"
+  },
+  {
+   "fieldname": "checkout_access_gate_name_en",
+   "fieldtype": "Read Only",
+   "label": "CheckOut Access Gate Name En"
+  },
+  {
+   "fieldname": "actual_working_hours",
+   "fieldtype": "Read Only",
+   "label": "Actual Working Hours"
+  },
+  {
+   "fieldname": "session_total_checkin_late_hours",
+   "fieldtype": "Read Only",
+   "label": "Session Total CheckIn Late Hours"
+  },
+  {
+   "fieldname": "session_total_checkout_late_hours",
+   "fieldtype": "Read Only",
+   "label": "Session Total CheckOut Late Hours"
+  },
+  {
+   "fieldname": "session_total_shortes_hours",
+   "fieldtype": "Read Only",
+   "label": "Session Total Shortes Hours"
+  },
+  {
+   "fieldname": "session_total_overtime_hours",
+   "fieldtype": "Read Only",
+   "label": "Session Total OverTime Hours"
+  },
+  {
+   "fieldname": "session_total_overtime_extra_hours",
+   "fieldtype": "Read Only",
+   "label": "Session Total OverTime Extra Hours"
+  },
+  {
+   "fieldname": "session_total_holiday_overtime_hours",
+   "fieldtype": "Read Only",
+   "label": "Session Total Holiday Overtime Hours"
+  },
+  {
+   "fieldname": "first_shift_start_time",
+   "fieldtype": "Read Only",
+   "label": "First Shift Start Time"
+  },
+  {
+   "fieldname": "first_shift_end_time",
+   "fieldtype": "Read Only",
+   "label": "First Shift End Time"
+  },
+  {
+   "fieldname": "sec_shift_start_time",
+   "fieldtype": "Read Only",
+   "label": "Sec Shift Start Time"
+  },
+  {
+   "fieldname": "sec_shift_end_time",
+   "fieldtype": "Read Only",
+   "label": "Sec Shift End Time"
+  },
+  {
+   "fieldname": "column_break_15",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Read Only",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Status"
+  },
+  {
+   "fieldname": "column_break_4",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "section_break_7",
+   "fieldtype": "Section Break",
+   "label": "CheckIn-Out Summary"
+  },
+  {
+   "fieldname": "section_break_1",
+   "fieldtype": "Section Break",
+   "label": "Employee Info"
+  },
+  {
+   "fieldname": "section_break_16",
+   "fieldtype": "Section Break",
+   "label": "Total Hours Summary"
+  },
+  {
+   "fieldname": "column_break_12",
+   "fieldtype": "Column Break"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2022-12-19 12:03:17.408336",
+ "modified_by": "Administrator",
+ "module": "Masar Availo",
+ "name": "Availo",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "track_changes": 1,
+ "track_seen": 1
+}
