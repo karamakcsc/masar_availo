@@ -112,7 +112,8 @@ def sync_attendance(date_from,date_to):
 		"service_key": "52B5F329-B9AE-446C-9260-B624FD1569CF",
 		# "authentication_type": "service_key",
 		"account_code": "MID",
-		"Content-Type": "application/json"
+		"Account Id": "441F8620-F708-42AA-8DF1-797B85FB2836"
+		# "Content-Type": "application/json"
 	}
 	# url = "https://availo-testingintegrationapi.t2.sa/api/ExternalReports/GetWorkingReportAllEmployee"
 	# payload = json.dumps({
