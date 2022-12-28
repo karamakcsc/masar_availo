@@ -96,7 +96,7 @@ def enqueue_sync_attendance(date_from,date_to):
 		date_to=date_to
 	)
 def sync_attendance(date_from,date_to):
-	url = "https://availo-testingintegrationapi.t2.sa/api/ExternalReports/GetWorkingReportAllEmployee"
+	url = "https://availo-integrationapi.availo.app:8443/api/ExternalReports/GetWorkingReportAllEmployee"
 	payload = json.dumps({
 		"pageNumber": 1,
 		"pageSize": 50,
@@ -109,11 +109,29 @@ def sync_attendance(date_from,date_to):
 	})
 	headers = {
 		"Language": "0",
-		"service_key": "5bf66aea-0de5-4b6a-826e-897e59c2391d",
+		"service_key": "52B5F329-B9AE-446C-9260-B624FD1569CF",
 		"authentication_type": "service_key",
-		"account_code": "QA",
+		"account_code": "MID",
 		"Content-Type": "application/json"
 	}
+	# url = "https://availo-testingintegrationapi.t2.sa/api/ExternalReports/GetWorkingReportAllEmployee"
+	# payload = json.dumps({
+	# 	"pageNumber": 1,
+	# 	"pageSize": 50,
+	# 	"data": {
+	# 		"timeZoneOffset": -120,
+	# 		"fromDate": date_from,
+	# 		"toDate": date_to,
+	# 		"displayType": 1
+	# 	}
+	# })
+	# headers = {
+	# 	"Language": "0",
+	# 	"service_key": "5bf66aea-0de5-4b6a-826e-897e59c2391d",
+	# 	"authentication_type": "service_key",
+	# 	"account_code": "QA",
+	# 	"Content-Type": "application/json"
+	# }
 
 	try:
 		request = get_request_session().request("POST", url, data=payload, headers=headers)
