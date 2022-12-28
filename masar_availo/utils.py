@@ -110,7 +110,7 @@ def sync_attendance(date_from,date_to):
 	headers = {
 		"Language": "0",
 		"service_key": "52B5F329-B9AE-446C-9260-B624FD1569CF",
-		"authentication_type": "service_key",
+		# "authentication_type": "service_key",
 		"account_code": "MID",
 		"Content-Type": "application/json"
 	}
