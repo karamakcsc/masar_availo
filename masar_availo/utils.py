@@ -136,7 +136,7 @@ def sync_attendance(date_from,date_to):
 
 	try:
 		request = get_request_session().request("POST", url, data=payload, headers=headers)
-		frappe.msgprint(request.txt)
+		# frappe.msgprint(request.txt)
 
 		status_code = request.status_code
 		response = request.json()
