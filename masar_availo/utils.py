@@ -91,7 +91,7 @@ def enqueue_sync_attendance(date_from,date_to):
 		method=sync_attendance,
 		queue="long",
 		is_async=True,
-		enqueue_after_commit=False,
+		enqueue_after_commit=True,
 		date_from=date_from,
 		date_to=date_to
 	)
@@ -110,10 +110,10 @@ def sync_attendance(date_from,date_to):
 	headers = {
 		"Language": "0",
 		"service_key": "52B5F329-B9AE-446C-9260-B624FD1569CF",
-		# "authentication_type": "service_key",
-		"account_code": "MID",
-		"Account Id": "441F8620-F708-42AA-8DF1-797B85FB2836"
-		# "Content-Type": "application/json"
+		"authentication_type": "service_key",
+		# "account_code": "MID",
+		# "account_id": "441F8620-F708-42AA-8DF1-797B85FB2836"
+		"Content-Type": "application/json"
 	}
 	# url = "https://availo-testingintegrationapi.t2.sa/api/ExternalReports/GetWorkingReportAllEmployee"
 	# payload = json.dumps({
@@ -136,7 +136,7 @@ def sync_attendance(date_from,date_to):
 
 	try:
 		request = get_request_session().request("POST", url, data=payload, headers=headers)
-		frappe.msgprint("Siam")
+		frappe.msgprint(request.txt)
 
 		status_code = request.status_code
 		response = request.json()
