@@ -166,15 +166,15 @@ def sync_attendance(date_from,date_to):
 
 
 def store_attendance(data):
-    # This is used to reduce memory usage
-    for i in range(len(data)):
-        add_attendance(data.pop());
+	# This is used to reduce memory usage
+	for i in range(len(data)):
+		add_attendance(data.pop());
 
-    frappe.publish_realtime(
-        event="attendance_synced",
-        message={"status": "done"},
-        after_commit=True
-    )
+	frappe.publish_realtime(
+		event="attendance_synced",
+		message={"status": "done"},
+		after_commit=True
+	)
 
 
 def add_attendance(data):
@@ -247,90 +247,48 @@ def to_json(data, default=None):
 
 ##################### Update CheckIn#### Start Code
 
-# @frappe.whitelist()
-# def enqueue_sync_checkin():
-# 	print("in enqueue")
-# 	frappe.enqueue(
-# 		# Put the python namespace before .sync_attendance
-# 		method=sync_checkin,
-# 		queue="long",
-# 		is_async=True,
-# 		enqueue_after_commit=False,
-# 	)
-# 	print("out enqueue")
 
 @frappe.whitelist()
 def sync_checkin():
 	data=frappe.db.sql(f"""SELECT name, job_code, selected_date, checkin_date, checkout_date FROM tabAvailo""",as_dict=True)
 	for i in range(len(data)):
-		entry = {
-			"employee": data[i]["job_code"],
-			"time": datetime.strptime(data[i]["selected_date"][:10] + " " + data[i]["checkin_date"], "%Y-%m-%d %H:%M:%S"),
-			"log_type": "IN",
-			"timestamp": data[i]["selected_date"],
-			"employee_field_value": "123",
-			"device_id": data[i]["job_code"]
-		}
-		(frappe.new_doc("Employee Checkin")
-			.update(entry)
-			.insert(ignore_permissions=True, ignore_mandatory=True))
+		print(f"checkin_date: {data[i]['checkin_date']}")
+		print(f"checkout_date: {data[i]['checkout_date']}")
+		if data[i]['checkin_date']:
+			try:
+				checkin_time = datetime.strptime(data[i]["selected_date"][:10] + " " + data[i]["checkin_date"], "%Y-%m-%d %H:%M")
+			except ValueError:
+				print(f"Invalid checkin date: {data[i]['checkin_date']}")
+				continue
+			entry = {
+				"employee": data[i]["job_code"],
+				"time": checkin_time,
+				"log_type": "IN",
+				"timestamp": data[i]["selected_date"],
+				"employee_field_value": "123",
+				"device_id": data[i]["job_code"]
+			}
+			(frappe.new_doc("Employee Checkin")
+				.update(entry)
+				.insert(ignore_permissions=True, ignore_mandatory=True))
 
-		entry = {
-			"employee": data[i]["job_code"],
-			"time": datetime.strptime(data[i]["selected_date"][:10] + " " + data[i]["checkout_date"], "%Y-%m-%d %H:%M:%S"),
-			"log_type": "OUT",
-			"availo": data[i]["name"],
-			"timestamp":  data[i]["selected_date"],
-			"employee_field_value": "123",
-			"device_id": "123"
-		}
-		(frappe.new_doc("Employee Checkin")
-			.update(entry)
-			.insert(ignore_permissions=True, ignore_mandatory=True))
-
-# def reformat_date(date: str):
-# 	try:
-# 		return datetime.strptime(data[i]["selected_date"][:10] + " " + data[i]["checkout_date"], "%Y-%m-%d %H:%M:%S")
-# 	except Exception:
-# 		return datetime.strptime(data[i]["selected_date"][:10], "%Y-%m-%d")
-
-
-
-# def reformat_date(date: str):
-# 	try:
-# 		return formatdate(date, DATE_FORMAT)
-# 	except Exception:
-# 		try:
-# 			return getDate(date).strftime
-# 		except Exception:
-# 			return date
-#
-#
-# 	# availo = frappe.get_meta("Availo")
-# 	data = frappe.get_all("Availo", fields=["job_code", "selected_date"]
-# 	# ,filters={"email_id": user}
-# 	)
-#
-# 	# customers = [c.customer for c in contacts if c.customer] if meta.get_field("customer") else None
-#
-# 	for i in range(len(data)):
-# 		add_checkin(data.pop());
-#
-# # def store_checkin(data):
-# # 	# This is used to reduce memory usage
-# # 	for i in range(len(data)):
-# # 		add_checkin(data.pop());
-#
-# def add_checkin(data):
-# 	# Add all the data to doctype
-# 	for j in range(len(data.get("workReportTransactions").get("list"))):
-# 		entry = {
-# 			"job_code": data.get_field("customer"),
-# 			"selected_date":
-#			"log_type":
-# 		}
-# 		(frappe.new_doc("Employee Checkin")
-# 			.update(entry)
-# 			.insert(ignore_permissions=True, ignore_mandatory=True))
+		if data[i]['checkout_date']:
+			try:
+				checkout_time = datetime.strptime(data[i]["selected_date"][:10] + " " + data[i]["checkout_date"], "%Y-%m-%d %H:%M")
+			except ValueError:
+				print(f"Invalid checkout date: {data[i]['checkout_date']}")
+				continue
+			entry = {
+				"employee": data[i]["job_code"],
+				"time": checkout_time,
+				"log_type": "OUT",
+				"availo": data[i]["name"],
+				"timestamp":  data[i]["selected_date"],
+				"employee_field_value": "123",
+				"device_id": "123"
+			}
+			(frappe.new_doc("Employee Checkin")
+				.update(entry)
+				.insert(ignore_permissions=True, ignore_mandatory=True))
 
 ##################### Update CheckIn#### End Code

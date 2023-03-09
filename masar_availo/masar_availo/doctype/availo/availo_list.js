@@ -47,17 +47,17 @@ frappe.listview_settings['Availo'] = {
             null,
             'primary'
         );
-        // list.page.add_inner_button(
-        //     __('Insert CheckIn'),
-        //     function() {
-        //         frappe.call({
-        //             method: 'masar_availo.utils.sync_checkin',
-        //             callback: function(ret) {},
-        //         });
-        //     },
-        //     null,
-        //     'primary'
-        // );
+        list.page.add_inner_button(
+            __('Insert CheckIn'),
+            function() {
+                frappe.call({
+                    method: 'masar_availo.utils.sync_checkin',
+                    callback: function(ret) {},
+                });
+            },
+            null,
+            'primary'
+        );
     }
 };
 
