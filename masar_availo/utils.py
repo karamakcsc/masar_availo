@@ -98,8 +98,8 @@ def enqueue_sync_attendance(date_from,date_to):
 def sync_attendance(date_from,date_to):
 	url = "https://availo-integrationapi.availo.app:8443/api/ExternalReports/GetWorkingReportAllEmployee"
 	payload = json.dumps({
-		"pageNumber": 1,
-		"pageSize": 50,
+		"pageNumber": 0,
+		"pageSize": 0,
 		"data": {
 			"timeZoneOffset": -120,
 			"fromDate": date_from,
