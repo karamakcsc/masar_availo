@@ -295,58 +295,77 @@ def to_json(data, default=None):
 ##################### Update CheckIn#### End Code
 
 
+
+
 @frappe.whitelist()
-def sync_checkin():
-    data = frappe.db.sql(f"""SELECT name, job_code, selected_date, checkin_date, checkout_date FROM tabAvailo""", as_dict=True)
-    for i in range(len(data)):
-        print(f"checkin_date: {data[i]['checkin_date']}")
-        print(f"checkout_date: {data[i]['checkout_date']}")
-        if data[i]['checkin_date']:
+def sync_checkin(date_from, date_to):
+    date_from = str(date_from)
+    date_to = str(date_to)
+
+    # Query data from the custom table "tabAvailo"
+    data = frappe.db.sql(
+        f"""SELECT name, job_code, selected_date, checkin_date, checkout_date FROM tabAvailo
+        WHERE selected_date BETWEEN %s AND %s""",
+        (date_from, date_to),
+        as_dict=True,
+    )
+
+    for record in data:
+        print(f"Processing record: {record['name']}")
+
+        if record['checkin_date']:
             try:
-                checkin_time = datetime.strptime(data[i]["selected_date"][:10] + " " + data[i]["checkin_date"], "%Y-%m-%d %H:%M")
+                checkin_time = datetime.strptime(
+                    record["selected_date"][:10] + " " + record["checkin_date"], "%Y-%m-%d %H:%M"
+                )
             except ValueError:
-                print(f"Invalid check-in date: {data[i]['checkin_date']}")
+                print(f"Invalid check-in date: {record['checkin_date']}")
                 continue
-            
+
             entry = {
-                "employee": data[i]["job_code"],
+                "employee": record["job_code"],
                 "time": checkin_time,
                 "log_type": "IN",
-                "timestamp": data[i]["selected_date"],
+                "timestamp": record["selected_date"],
                 "employee_field_value": "123",
-                "device_id": data[i]["job_code"]
+                "device_id": record["job_code"],
             }
 
             try:
-                (frappe.new_doc("Employee Checkin")
-                    .update(entry)
-                    .insert(ignore_permissions=True, ignore_mandatory=True))
+                new_checkin = frappe.get_doc({"doctype": "Employee Checkin", **entry})
+                new_checkin.insert(ignore_permissions=True, ignore_mandatory=True)
             except frappe.exceptions.DuplicateEntryError:
-                print(f"Duplicate timestamp for check-in: {data[i]['selected_date']}")
+                print(f"Duplicate timestamp for check-in: {record['selected_date']}")
                 continue
 
-        if data[i]['checkout_date']:
+        if record['checkout_date']:
             try:
-                checkout_time = datetime.strptime(data[i]["selected_date"][:10] + " " + data[i]["checkout_date"], "%Y-%m-%d %H:%M")
+                checkout_time = datetime.strptime(
+                    record["selected_date"][:10] + " " + record["checkout_date"], "%Y-%m-%d %H:%M"
+                )
             except ValueError:
-                print(f"Invalid checkout date: {data[i]['checkout_date']}")
+                print(f"Invalid checkout date: {record['checkout_date']}")
                 continue
-            
+
             entry = {
-                "employee": data[i]["job_code"],
+                "employee": record["job_code"],
                 "time": checkout_time,
                 "log_type": "OUT",
-                "availo": data[i]["name"],
-                "timestamp": data[i]["selected_date"],
+                "availo": record["name"],
+                "timestamp": record["selected_date"],
                 "employee_field_value": "123",
-                "device_id": "123"
+                "device_id": "123",
             }
 
             try:
-                (frappe.new_doc("Employee Checkin")
-                    .update(entry)
-                    .insert(ignore_permissions=True, ignore_mandatory=True))
+                new_checkout = frappe.get_doc({"doctype": "Employee Checkin", **entry})
+                new_checkout.insert(ignore_permissions=True, ignore_mandatory=True)
                 frappe.db.commit()
             except frappe.exceptions.DuplicateEntryError:
-                print(f"Duplicate timestamp for check-out: {data[i]['selected_date']}")
+                print(f"Duplicate timestamp for check-out: {record['selected_date']}")
                 continue
+
+    print("Sync completed.")
+
+# Usage example:
+# sync_checkin("2023-07-01T00:00:00", "2023-07-31T23:59:59")

@@ -9,7 +9,7 @@ frappe.listview_settings['Availo'] = {
                             fieldname: 'date_from',
                             fieldtype: 'Date',
                             label: __('From Date'),
-                            'default': 'Today',
+                            'default': frappe.datetime.get_today(),
                             reqd: 1,
                             bold: 1
                         },
@@ -17,7 +17,7 @@ frappe.listview_settings['Availo'] = {
                             fieldname: 'date_to',
                             fieldtype: 'Date',
                             label: __('To Date'),
-                            'default': 'Today',
+                            'default': frappe.datetime.get_today(),
                             reqd: 1,
                             bold: 1
                         },
@@ -29,7 +29,9 @@ frappe.listview_settings['Availo'] = {
                                 date_from: values.date_from,
                                 date_to: values.date_to,
                             },
-                            callback: function(ret) {},
+                            callback: function(ret) {
+                                // Handle the callback if needed
+                            },
                         });
                         frappe.show_alert({
                             message: __('Sync has started in the background.'),
@@ -47,33 +49,47 @@ frappe.listview_settings['Availo'] = {
             null,
             'primary'
         );
+
         list.page.add_inner_button(
             __('Insert CheckIn'),
             function() {
-                frappe.call({
-                    method: 'masar_availo.utils.sync_checkin',
-                    callback: function(ret) {},
-                });
+                frappe.prompt(
+                    [
+                        {
+                            fieldname: 'date_from',
+                            fieldtype: 'Date',
+                            label: __('From Date'),
+                            'default': frappe.datetime.get_today(),
+                            reqd: 1,
+                            bold: 1
+                        },
+                        {
+                            fieldname: 'date_to',
+                            fieldtype: 'Date',
+                            label: __('To Date'),
+                            'default': frappe.datetime.get_today(),
+                            reqd: 1,
+                            bold: 1
+                        },
+                    ],
+                    function(values) {
+                        frappe.call({
+                            method: 'masar_availo.utils.sync_checkin',
+                            args: {
+                                date_from: values.date_from,
+                                date_to: values.date_to,
+                            },
+                            callback: function(ret) {
+                                // Handle the callback if needed
+                            },
+                        });
+                    },
+                    __('Insert CheckIn Date Range'),
+                    __('Insert CheckIn')
+                );
             },
             null,
             'primary'
         );
     }
 };
-
-
-// frappe.listview_settings['Availo'] = {
-//     onload: function(list) {
-//         list.page.add_inner_button(
-//             __('Insert CheckIn'),
-//             function() {
-//                 frappe.call({
-//                     method: 'masar_availo.utils.sync_checkin',
-//                     callback: function(ret) {},
-//                 });
-//             },
-//             null,
-//             'primary'
-//         );
-//     }
-// };
