@@ -79,171 +79,165 @@ from frappe.utils import(
 # 	return
 
 
-# Send the from date and to date to this method
-@frappe.whitelist()
-def enqueue_sync_attendance(date_from,date_to):
-	#date_from = str(datetime.date(2020, 10, 10))
-	# date_to = str(datetime.date(2020, 11, 22))
-	date_from = str(date_from)
-	date_to = str(date_to)
-	frappe.enqueue(
-		# Put the python namespace before .sync_attendance
-		method=sync_attendance,
-		queue="long",
-		is_async=True,
-		enqueue_after_commit=True,
-		date_from=date_from,
-		date_to=date_to
-	)
-def sync_attendance(date_from,date_to):
-	url = "https://availo-integrationapi.availo.app:8443/api/ExternalReports/GetWorkingReportAllEmployee"
-	payload = json.dumps({
-		"pageNumber": 0,
-		"pageSize": 0,
-		"data": {
-			"timeZoneOffset": -120,
-			"fromDate": date_from,
-			"toDate": date_to,
-			"displayType": 1
-		}
-	})
-	headers = {
-		"Language": "0",
-		"service_key": "52B5F329-B9AE-446C-9260-B624FD1569CF",
-		"authentication_type": "service_key",
-		# "account_code": "MID",
-		# "account_id": "441F8620-F708-42AA-8DF1-797B85FB2836"
-		"Content-Type": "application/json"
-	}
-	# url = "https://availo-testingintegrationapi.t2.sa/api/ExternalReports/GetWorkingReportAllEmployee"
-	# payload = json.dumps({
-	# 	"pageNumber": 1,
-	# 	"pageSize": 50,
-	# 	"data": {
-	# 		"timeZoneOffset": -120,
-	# 		"fromDate": date_from,
-	# 		"toDate": date_to,
-	# 		"displayType": 1
-	# 	}
-	# })
-	# headers = {
-	# 	"Language": "0",
-	# 	"service_key": "5bf66aea-0de5-4b6a-826e-897e59c2391d",
-	# 	"authentication_type": "service_key",
-	# 	"account_code": "QA",
-	# 	"Content-Type": "application/json"
-	# }
+# import json
+# import frappe
+# from masar_availo import get_request_session  # Assuming you have a module with this function
 
-	try:
-		request = get_request_session().request("POST", url, data=payload, headers=headers)
-		# frappe.msgprint(request.txt)
+# Decorator to allow guest access
+@frappe.whitelist(allow_guest=True)
+def enqueue_sync_attendance(date_from, date_to):
+    date_from = str(date_from)
+    date_to = str(date_to)
+    sync_attendance(date_from, date_to)
+    # Enqueue the sync_attendance method for asynchronous processing
+    # frappe.enqueue(
+    #     method=sync_attendance,
+    #     queue="long",
+    #     is_async=True,
+    #     enqueue_after_commit=True,
+    #     date_from=date_from,
+    #     date_to=date_to
+    # )
+def sync_attendance(date_from, date_to):
+    url = "https://availo-integrationapi.availo.app:8443/api/ExternalReports/GetWorkingReportAllEmployee"
+    payload = {
+        "pageNumber": 0,
+        "pageSize": 0,
+        "data": {
+            "timeZoneOffset": -120,
+            "fromDate": date_from,
+            "toDate": date_to,
+            "displayType": 1
+        }
+    }
+    headers = {
+        "Language": "0",
+        "service_key": "52B5F329-B9AE-446C-9260-B624FD1569CF",
+        "authentication_type": "service_key",
+        # "account_code": "MID",
+        "Content-Type": "application/json"        
+    }
 
-		status_code = request.status_code
-		response = request.json()
-	except Exception as exc:
-		error(str(exc))
+    try:
+        # Send a POST request to the external API
+        # request = get_request_session().request("POST", url, data=payload, headers=headers)
+        # status_code = request.status_code
+        # response = request.json()
+        request_return =  requests.post(url , json=payload, headers=headers) 
+        response = request_return.json()
+        status_code = request_return.status_code
 
-	response = parse_json(response)
+    except Exception as exc:
+        # Log and handle exceptions
+        error(str(exc))
+    
+    # Parse the JSON response
+    response = parse_json(response)
 
-	if status_code != 200 and status_code != 201:
-		error(_("The response was not resolved."))
-		return False
+    # # Check the status code and response validity
+    if status_code not in [200, 201]:
+        error(_("The response was not resolved."))
+        return False
 
-	if not isinstance(response, dict):
-		error(_("The response received from api is invalid."))
+    if not isinstance(response, dict):
+        error(_("The response received from API is invalid."))
 
-	data = response["data"]
-	if not data.get("list") or not isinstance(data["list"], list):
-		error(_("The response data list received from api is invalid."))
-		return False
+    # data = response.get("data")
+    data = response["data"]
+    lst = data['list']
+    total_count_of_lst = data["totalCount"] 
+    if not data or not isinstance(lst, list):
+        error(_("The response data list received from API is invalid."))
+        return False
+    # frappe.msgprint(str(data["totalCount"]))
+    # # Store the attendance data
+    store_attendance(lst , total_count_of_lst)
 
-	data = response["data"]
-
-	if not data.get("list") or not isinstance(data["list"], list):
-		error(_("The response data list received from api is invalid."))
-
-	store_attendance(data["list"])
-
-
-def store_attendance(data):
-	# This is used to reduce memory usage
-	for i in range(len(data)):
-		add_attendance(data.pop());
-
-	frappe.publish_realtime(
-		event="attendance_synced",
-		message={"status": "done"},
-		after_commit=True
-	)
-
+def store_attendance(data , total_count_of_lst):
+    # frappe.publish_progress(25, title='Some title', description='Some description')
+    for item in range(total_count_of_lst):
+        # Add each attendance entry
+        add_attendance(data[item])
+    # Publish a realtime event after committing the changes
+    
+    # frappe.publish_realtime(
+    #     event="attendance_synced",
+    #     message={"status": "done"},
+    #     after_commit=True
+    # )
 
 def add_attendance(data):
-	# Add all the data to doctype
-	for j in range(len(data.get("workReportTransactions").get("list"))):
-		entry = {
-			"job_code": data.get("jobNumber", ""),
-			"employee": data.get("userName", ""),
-			"employee_name": data.get("fullName", ""),
-			"total_plan_work_hour_during_interval":data.get("totalPlanWorkHourDuringInterval", ""),
-			"total_hours_work_during_interval":data.get("totalHoursWorkDuringInterval", ""),
-			"total_checkin_late_hours_during_interval":data.get("totalCheckInLateHoursDuringInterval", ""),
-			"total_checkout_late_hours_during_interval":data.get("totalCheckOutLateHoursDuringInterval", ""),
-			"status":data.get("workReportTransactions").get("list")[j].get("status", ""),
-			"selected_date":data.get("workReportTransactions").get("list")[j].get("selectedDate", ""),
-			"working_hours":data.get("workReportTransactions").get("list")[j].get("workingHours", ""),
-			"checkin_date":data.get("workReportTransactions").get("list")[j].get("checkInDate", ""),
-			"sub_type_id":data.get("workReportTransactions").get("list")[j].get("subTypeID", ""),
-			"checkin_access_gate_name_ar":data.get("workReportTransactions").get("list")[j].get("checkInAccessGateNameAr", ""),
-			"checkin_access_gate_name_en":data.get("workReportTransactions").get("list")[j].get("checkInAccessGateNameEn", ""),
-			"checkout_date":data.get("workReportTransactions").get("list")[j].get("checkOutDate", ""),
-			"checkout_date_time":data.get("workReportTransactions").get("list")[j].get("checkOutDateTime", ""),
-			"checkout_access_gate_name_ar":data.get("workReportTransactions").get("list")[j].get("checkOutAccessGateNameAr", ""),
-			"checkout_access_gate_name_en":data.get("workReportTransactions").get("list")[j].get("checkOutAccessGateNameEn", ""),
-			"actual_working_hours":data.get("workReportTransactions").get("list")[j].get("actualWorkingHours", ""),
-			"session_total_checkin_late_hours":data.get("workReportTransactions").get("list")[j].get("sessionTotalCheckInLateHours", ""),
-			"session_total_checkout_late_hours":data.get("workReportTransactions").get("list")[j].get("sessionTotalCheckOutLateHours", ""),
-			"session_total_shortes_hours":data.get("workReportTransactions").get("list")[j].get("sessionTotalShortesHours", ""),
-			"session_total_overtime_hours":data.get("workReportTransactions").get("list")[j].get("sessionTotalOverTimeHours", ""),
-			"session_total_overtime_extra_hours":data.get("workReportTransactions").get("list")[j].get("sessionTotalOverTimeExtraHours", ""),
-			"session_total_holiday_overtime_hours":data.get("workReportTransactions").get("list")[j].get("sessionTotalHolidayOverTimeHours", ""),
-			"first_shift_start_time":data.get("workReportTransactions").get("list")[j].get("firstShiftStartTime", ""),
-			"first_shift_end_time":data.get("workReportTransactions").get("list")[j].get("firstShiftEndTime", ""),
-			"sec_shift_start_time":data.get("workReportTransactions").get("list")[j].get("secShiftStartTime", ""),
-			"sec_shift_end_time":data.get("workReportTransactions").get("list")[j].get("secShiftEndTime", ""),
-		}
-		(frappe.new_doc("Availo")
-			.update(entry)
-			.insert(ignore_permissions=True, ignore_mandatory=True))
-
+    # frappe.msgprint(str(data))
+    total_count_of_employee_lst = data["workReportTransactions"]["totalCount"] ## 31 
+    for month_dates in range(total_count_of_employee_lst):
+    # frappe.msgprint(str(total_count_of_employee_lst) )
+        transaction = data["workReportTransactions"]["list"][month_dates]
+        entry = {	
+                "job_code": data["jobNumber"],
+                "employee": data["userName"],
+                "employee_name": data["fullName"],
+                "total_plan_work_hour_during_interval":data["totalPlanWorkHourDuringInterval"],
+                "total_hours_work_during_interval":data["totalHoursWorkDuringInterval"],
+                "total_checkin_late_hours_during_interval":data["totalCheckInLateHoursDuringInterval"],
+                "total_checkout_late_hours_during_interval":data["totalCheckOutLateHoursDuringInterval"],
+                ##### in workReportTransactions now 
+                "selected_date":transaction["selectedDate"],
+                "status":transaction["status"],
+                "working_hours":transaction["workingHours"],
+                "checkin_date":transaction["checkInDate"],
+                "sub_type_id":transaction["subTypeID"],
+                "checkin_access_gate_name_ar":transaction["checkInAccessGateNameAr"],
+                "checkin_access_gate_name_en":transaction["checkInAccessGateNameEn"],
+                "checkout_date":transaction["checkOutDate"],
+                "checkout_date_time":transaction["checkOutDateTime"],
+                "checkout_access_gate_name_ar":transaction["checkOutAccessGateNameAr"],
+                "checkout_access_gate_name_en":transaction["checkOutAccessGateNameEn"],
+                "actual_working_hours":transaction["actualWorkingHours"],
+                "session_total_checkin_late_hours":transaction["sessionTotalCheckInLateHours"],
+                "session_total_checkout_late_hours":transaction["sessionTotalCheckOutLateHours"],
+                "session_total_shortes_hours":transaction["sessionTotalShortesHours"],
+                "session_total_overtime_hours":transaction["sessionTotalOverTimeHours"],
+                "session_total_overtime_extra_hours":transaction["sessionTotalOverTimeExtraHours"],
+                "session_total_holiday_overtime_hours":transaction["sessionTotalHolidayOverTimeHours"],
+                "first_shift_start_time":transaction["firstShiftStartTime"],
+                "first_shift_end_time":transaction["firstShiftEndTime"],
+                "sec_shift_start_time":transaction["secShiftStartTime"],
+                "sec_shift_end_time":transaction["secShiftEndTime"],
+            }
+        # Insert the attendance entry
+        frappe.new_doc("Availo").update(entry).insert(ignore_permissions=True, ignore_mandatory=True)
 
 def error(text, throw=True):
-	if not isinstance(text, str):
-		text = to_json(text, str(text))
-	frappe.log_error("Availo", text)
-	if throw:
-		frappe.throw(text, title="Availo")
-
+    # Log the error and optionally throw an exception
+    if not isinstance(text, str):
+        text = to_json(text, str(text))
+    frappe.log_error("Availo", text)
+    if throw:
+        frappe.throw(text, title="Availo")
 
 def parse_json(data, default=None):
-	if not isinstance(data, str):
-		return data
-	if default is None:
-		default = data
-	try:
-		return json.loads(data)
-	except Exception:
-		return default
-
+    # Parse JSON data with a fallback value
+    if not isinstance(data, str):
+        return data
+    if default is None:
+        default = data
+    try:
+        return json.loads(data)
+    except Exception:
+        return default
 
 def to_json(data, default=None):
-	if isinstance(data, str):
-		return data
-	if default is None:
-		default = data
-	try:
-		return json.dumps(data)
-	except Exception:
-		return default
+    # Convert data to JSON with a fallback value
+    if isinstance(data, str):
+        return data
+    if default is None:
+        default = data
+    try:
+        return json.dumps(data)
+    except Exception:
+        return default
+
+
 
 ##################### Update CheckIn#### Start Code
 
@@ -304,14 +298,14 @@ def sync_checkin(date_from, date_to):
 
     # Query data from the custom table "tabAvailo"
     data = frappe.db.sql(
-        f"""SELECT name, job_code, selected_date, checkin_date, checkout_date FROM tabAvailo
+        """SELECT name, job_code, selected_date, checkin_date, checkout_date FROM tabAvailo
         WHERE selected_date BETWEEN %s AND %s""",
         (date_from, date_to),
         as_dict=True,
     )
 
     for record in data:
-        print(f"Processing record: {record['name']}")
+        # print(f"Processing record: {record['name']}")
 
         if record['checkin_date']:
             try:
@@ -319,7 +313,7 @@ def sync_checkin(date_from, date_to):
                     record["selected_date"][:10] + " " + record["checkin_date"], "%Y-%m-%d %H:%M"
                 )
             except ValueError:
-                print(f"Invalid check-in date: {record['checkin_date']}")
+                frappe.msgprint(f"Invalid check-in date: {record['checkin_date']}")
                 continue
 
             entry = {
@@ -335,7 +329,7 @@ def sync_checkin(date_from, date_to):
                 new_checkin = frappe.get_doc({"doctype": "Employee Checkin", **entry})
                 new_checkin.insert(ignore_permissions=True, ignore_mandatory=True)
             except frappe.exceptions.DuplicateEntryError:
-                print(f"Duplicate timestamp for check-in: {record['selected_date']}")
+                frappe.msgprint(f"Duplicate timestamp for check-in: {record['selected_date']}")
                 continue
 
         if record['checkout_date']:
@@ -344,7 +338,7 @@ def sync_checkin(date_from, date_to):
                     record["selected_date"][:10] + " " + record["checkout_date"], "%Y-%m-%d %H:%M"
                 )
             except ValueError:
-                print(f"Invalid checkout date: {record['checkout_date']}")
+                frappe.msgprint(f"Invalid checkout date: {record['checkout_date']}")
                 continue
 
             entry = {
@@ -362,10 +356,10 @@ def sync_checkin(date_from, date_to):
                 new_checkout.insert(ignore_permissions=True, ignore_mandatory=True)
                 frappe.db.commit()
             except frappe.exceptions.DuplicateEntryError:
-                print(f"Duplicate timestamp for check-out: {record['selected_date']}")
+                frappe.msgprint(f"Duplicate timestamp for check-out: {record['selected_date']}")
                 continue
 
-    print("Sync completed.")
+    frappe.msgprint("Sync completed.")
 
 # Usage example:
 # sync_checkin("2023-07-01T00:00:00", "2023-07-31T23:59:59")

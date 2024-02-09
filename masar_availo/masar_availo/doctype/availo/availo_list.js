@@ -26,10 +26,10 @@ frappe.listview_settings['Availo'] = {
                         frappe.call({
                             method: 'masar_availo.utils.enqueue_sync_attendance',
                             args: {
-                                date_from: values.date_from,
-                                date_to: values.date_to,
+                                date_from: values.date_from, 
+                                date_to: values.date_to,    
                             },
-                            callback: function(ret) {
+                            callback: function(ret) {   
                                 // Handle the callback if needed
                             },
                         });
