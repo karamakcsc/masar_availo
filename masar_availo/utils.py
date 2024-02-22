@@ -133,8 +133,7 @@ def sync_attendance(date_from, date_to):
     
     # Parse the JSON response
     response = parse_json(response)
-
-    # # Check the status code and response validity
+    # Check the status code and response validity
     if status_code not in [200, 201]:
         error(_("The response was not resolved."))
         return False
@@ -376,11 +375,26 @@ def sync_checkin(date_from, date_to):
     date_from = str(date_from)
     date_to = str(date_to)
     data = frappe.db.sql("""
-    SELECT ta.name , ta.job_code , ta.selected_date ,ta.checkin_date , ta.checkout_date , 
-        ta.checkin_access_gate_name_en , ta.checkout_access_gate_name_en 
-        FROM tabAvailo ta 
-        WHERE status = 'Completed'
-        AND selected_date BETWEEN %s AND %s
+SELECT 
+            
+ta.name,ta.status,
+            ta.job_code,
+            ta.selected_date,
+            ta.checkin_date,
+            ta.checkout_date,
+            ta.checkin_access_gate_name_en,
+            ta.checkout_access_gate_name_en,
+            te.default_shift,
+            tsa.shift_type
+        FROM 
+            `tabAvailo` ta
+        left JOIN 
+            `tabEmployee` te ON te.name = ta.job_code
+        left JOIN 
+            `tabShift Assignment` tsa ON tsa.employee = te.name
+        WHERE 
+           ta.status NOT IN ('Absence', '_') and ta.checkin_date != '-' and ta.checkout_date != '-'
+        AND ta.selected_date BETWEEN %s AND %s
     """,(date_from, date_to),as_dict = True)
     for record in data:
         availo               = record["name"]
@@ -393,10 +407,15 @@ def sync_checkin(date_from, date_to):
         selected_datetime = datetime.strptime(selected_date_sql, '%Y-%m-%dT%H:%M:%S')
         checkin_date = datetime.strptime(checkin_date_sql, '%H:%M').time()
         checkout_date = datetime.strptime(checkout_date_sql, '%H:%M').time()
-        selected_date = selected_datetime.date() ######## selected date Y-M-D
+        selected_date = selected_datetime.date() ######### selected date Y-M-D
         checkin_time = datetime.combine(selected_date, checkin_date)
         checkout_time = datetime.combine(selected_date, checkout_date)
-        # frappe.msgprint(str(combined_datetime))
+        if record['default_shift']  is None :
+            emp_shift =  record['shift_type']
+        else:
+            emp_shift =  record['default_shift']
+    # frappe.msgprint(str(len(data)))
+
         try:
             entry = {
                 "employee":employee,
@@ -404,6 +423,7 @@ def sync_checkin(date_from, date_to):
                 "log_type": "IN",
                 "time": checkin_time,
                 "device_id": checkin_access_gate , 
+                "shift_type" : emp_shift
             }
             new_checkin = frappe.get_doc({"doctype": "Employee Checkin", **entry})
             new_checkin.insert(ignore_permissions=True, ignore_mandatory=True)
@@ -416,7 +436,8 @@ def sync_checkin(date_from, date_to):
                 "availo": availo,
                 "log_type": "OUT",
                 "time": checkout_time,
-                "device_id": checkout_access_gate , 
+                "device_id": checkout_access_gate ,
+                "shift_type" : emp_shift 
             }
             new_checkout = frappe.get_doc({"doctype": "Employee Checkin", **entry})
             new_checkout.insert(ignore_permissions=True, ignore_mandatory=True)
