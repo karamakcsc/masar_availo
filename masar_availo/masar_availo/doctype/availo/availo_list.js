@@ -74,7 +74,7 @@ frappe.listview_settings['Availo'] = {
                     ],
                     function(values) {
                         frappe.call({
-                            method: 'masar_availo.utils.sync_checkin',
+                            method: 'masar_availo.utils.enqueue_sync_checkin',
                             args: {
                                 date_from: values.date_from,
                                 date_to: values.date_to,
@@ -82,6 +82,14 @@ frappe.listview_settings['Availo'] = {
                             callback: function(ret) {
                                 // Handle the callback if needed
                             },
+                        });
+                        frappe.show_alert({
+                            message: __('Sync has started in the background.'),
+                            indicator: 'green',
+                        });
+                        frappe.socketio.init();
+                        frappe.realtime.on('attendance_synced', function() {
+                            list.refresh();
                         });
                     },
                     __('Insert CheckIn Date Range'),

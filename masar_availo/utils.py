@@ -371,7 +371,7 @@ def to_json(data, default=None):
 ####################################################################################################
     
 @frappe.whitelist()
-def sync_checkin(date_from, date_to):
+def enqueue_sync_checkin(date_from, date_to):
     date_from = str(date_from)
     date_to = str(date_to)
     data = frappe.db.sql("""
