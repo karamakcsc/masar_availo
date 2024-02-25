@@ -396,6 +396,7 @@ ta.name,ta.status,
            ta.status NOT IN ('Absence', '_') and ta.checkin_date != '-' and ta.checkout_date != '-'
         AND ta.selected_date BETWEEN %s AND %s
     """,(date_from, date_to),as_dict = True)
+    emp_shift = None
     for record in data:
         availo               = record["name"]
         employee             = record['job_code']
@@ -410,40 +411,59 @@ ta.name,ta.status,
         selected_date = selected_datetime.date() ######### selected date Y-M-D
         checkin_time = datetime.combine(selected_date, checkin_date)
         checkout_time = datetime.combine(selected_date, checkout_date)
-        if record['default_shift']  is None :
-            emp_shift =  record['shift_type']
+        if record['default_shift'] is None:
+            emp_shift = record['shift_type']
         else:
-            emp_shift =  record['default_shift']
-    # frappe.msgprint(str(len(data)))
+            emp_shift = record['default_shift']
 
         try:
+            # new_checkin = frappe.new_doc('Employee Checkin')
+            # new_checkin.employee = employee
+            # new_checkin.availo = availo
+            # new_checkin.log_type = "IN"
+            # new_checkin.time = checkin_time
+            # new_checkin.device_id = checkin_access_gate
+            # new_checkin.shift_type = emp_shift
+            # new_checkin.insert(ignore_permissions=True, ignore_mandatory=True) 
+            # new_checkin.save()
+            # new_checkout = frappe.new_doc('Employee Checkin')
+            # new_checkout.employee = employee
+            # new_checkout.availo = availo
+            # new_checkout.log_type = "OUT"
+            # new_checkout.time = checkout_time
+            # new_checkout.device_id = checkout_access_gate
+            # new_checkout.shift_type = emp_shift
+            # new_checkout.insert(ignore_permissions=True, ignore_mandatory=True) 
+            # new_checkout.save()
+            
             entry = {
-                "employee":employee,
+                "employee": employee,
                 "availo": availo,
                 "log_type": "IN",
                 "time": checkin_time,
-                "device_id": checkin_access_gate , 
-                "shift_type" : emp_shift
+                "device_id": checkin_access_gate,
+                "shift_type": emp_shift
             }
             new_checkin = frappe.get_doc({"doctype": "Employee Checkin", **entry})
             new_checkin.insert(ignore_permissions=True, ignore_mandatory=True)
-            frappe.db.commit()
+            new_checkin.save()
         except Exception as e:
-             print(f"Error occurred while recording employee check-in: {str(e)}")
+            print(f"Error occurred while recording employee check-in: {str(e)}")
+
         try:
             entry = {
-                "employee":employee,
+                "employee": employee,
                 "availo": availo,
                 "log_type": "OUT",
                 "time": checkout_time,
-                "device_id": checkout_access_gate ,
-                "shift_type" : emp_shift 
+                "device_id": checkout_access_gate,
+                "shift_type": emp_shift
             }
             new_checkout = frappe.get_doc({"doctype": "Employee Checkin", **entry})
             new_checkout.insert(ignore_permissions=True, ignore_mandatory=True)
-            frappe.db.commit()
+            new_checkout.save()
         except Exception as e:
-             print(f"Error occurred while recording employee check-out: {str(e)}")
-
+            print(f"Error occurred while recording employee check-out: {str(e)}")
+        #print(f"checkIn is Created for {employee}")
+    frappe.db.commit()
     frappe.msgprint("Sync completed.")
-
