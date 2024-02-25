@@ -464,6 +464,6 @@ ta.name,ta.status,
             new_checkout.save()
         except Exception as e:
             print(f"Error occurred while recording employee check-out: {str(e)}")
-        #print(f"checkIn is Created for {employee}")
+        #print(f"checkIn is Created for {employee}") ###
     frappe.db.commit()
     frappe.msgprint("Sync completed.")
