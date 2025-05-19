@@ -33,10 +33,6 @@ frappe.listview_settings['Availo'] = {
                                 // Handle the callback if needed
                             },
                         });
-                        frappe.show_alert({
-                            message: __('Sync has started in the background.'),
-                            indicator: 'green',
-                        });
                         frappe.socketio.init();
                         frappe.realtime.on('attendance_synced', function() {
                             list.refresh();
@@ -82,10 +78,6 @@ frappe.listview_settings['Availo'] = {
                             callback: function(ret) {
                                 // Handle the callback if needed
                             },
-                        });
-                        frappe.show_alert({
-                            message: __('Sync has started in the background.'),
-                            indicator: 'green',
                         });
                         frappe.socketio.init();
                         frappe.realtime.on('attendance_synced', function() {
